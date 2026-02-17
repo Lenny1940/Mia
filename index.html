@@ -8,74 +8,108 @@
     body {
         font-family: 'Arial', sans-serif;
         text-align: center;
-        background: #ffe6f0;
-        color: #ff3366;
-        padding: 50px;
         overflow: hidden;
+        background: linear-gradient(135deg, #ffe6f0, #ffd9e6, #ffb3c6);
+        animation: bgPulse 6s infinite alternate;
+        color: #ff3366;
+        padding: 20px;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
+
+    @keyframes bgPulse {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 100% 50%; }
+    }
+
     h1 {
-        font-size: 2.5em;
+        font-size: 6vw; /* dynamische Größe für Handy */
         margin-bottom: 20px;
         white-space: pre-line;
+        min-height: 80px;
     }
+
     button {
         padding: 12px 25px;
-        font-size: 1.2em;
+        font-size: 5vw; /* dynamische Größe für Handy */
         border: none;
-        border-radius: 10px;
+        border-radius: 12px;
         background: #ff6699;
         color: white;
         cursor: pointer;
-        margin-top: 20px;
+        margin: 10px;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
+
     button:hover {
-        background: #ff3366;
+        transform: scale(1.1);
+        box-shadow: 0 0 15px #ff99aa;
     }
+
     .heart {
         position: absolute;
+        font-size: 15px;
         color: #ff3366;
-        font-size: 20px;
         animation: float 4s linear infinite;
     }
+
     @keyframes float {
-        0% {transform: translateY(0) rotate(0deg);}
-        100% {transform: translateY(-800px) rotate(360deg);}
+        0% { transform: translateY(0) rotate(0deg); opacity:1; }
+        100% { transform: translateY(-800px) rotate(360deg); opacity:0; }
     }
 </style>
 </head>
 <body>
 
-<h1 id="text">Hallo Mia ❤️</h1>
+<h1 id="text"></h1>
 <button id="btn">Weiter</button>
 
 <script>
-    const textEl = document.getElementById('text');
-    const btn = document.getElementById('btn');
+const textEl = document.getElementById('text');
+const btn = document.getElementById('btn');
+let step = 0;
 
-    let step = 0;
+// Herzchenregen
+function createHeart() {
+    const heart = document.createElement('div');
+    heart.classList.add('heart');
+    heart.style.left = Math.random() * window.innerWidth + 'px';
+    heart.style.fontSize = 15 + Math.random() * 25 + 'px';
+    heart.textContent = '❤️';
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 4000);
+}
+setInterval(createHeart, 300);
 
-    // Herzchenregen
-    function createHeart() {
-        const heart = document.createElement('div');
-        heart.classList.add('heart');
-        heart.style.left = Math.random() * window.innerWidth + 'px';
-        heart.style.fontSize = 15 + Math.random() * 25 + 'px';
-        heart.textContent = '❤️';
-        document.body.appendChild(heart);
-        setTimeout(() => heart.remove(), 4000);
-    }
-    setInterval(createHeart, 300);
-
-    // Schritt-für-Schritt Text
-    btn.addEventListener('click', () => {
-        step++;
-
-        if(step === 1){
-            textEl.textContent = "Es tut mir so leid 😔";
+// Typing Effekt
+function typeText(message, callback) {
+    textEl.textContent = '';
+    let i = 0;
+    const interval = setInterval(() => {
+        textEl.textContent += message.charAt(i);
+        i++;
+        if(i >= message.length) {
+            clearInterval(interval);
+            if(callback) callback();
         }
-        else if(step === 2){
-            textEl.textContent = "Willst du mir noch eine Chance geben?\nIch weiß, es war ein Fehler und das war nicht meine Absicht.";
-            btn.style.display = "none";
+    }, 50);
+}
+
+// Schritt-für-Schritt Logik
+btn.addEventListener('click', () => {
+    step++;
+
+    if(step === 1){
+        typeText("Hallo Mia ❤️");
+    }
+    else if(step === 2){
+        typeText("Es tut mir so leid 😔");
+    }
+    else if(step === 3){
+        btn.style.display = "none";
+        typeText("Willst du mir noch eine Chance geben?\nIch weiß, es war ein Fehler und das war nicht meine Absicht.", () => {
 
             // Ja/Nein Buttons erstellen
             const yesBtn = document.createElement('button');
@@ -83,20 +117,31 @@
             const noBtn = document.createElement('button');
             noBtn.textContent = "Nein 😢";
 
-            yesBtn.onclick = () => {
-                textEl.textContent = "Danke Schatz ❤️";
-                yesBtn.style.display = "none";
-                noBtn.style.display = "none";
-            }
+            let noClicks = 0;
 
             noBtn.onclick = () => {
+                noClicks++;
+                // Ja wächst, Nein schrumpft
+                yesBtn.style.transform = `scale(${1 + noClicks*0.1})`;
+                noBtn.style.transform = `scale(${Math.max(0.5, 1 - noClicks*0.1)})`;
+
+                // Wenn Nein sehr klein wird, verschwindet es
+                if(noClicks >= 5) {
+                    noBtn.style.display = "none";
+                }
+            }
+
+            yesBtn.onclick = () => {
+                typeText("Danke Schatz ❤️");
+                yesBtn.style.display = "none";
                 noBtn.style.display = "none";
             }
 
             document.body.appendChild(yesBtn);
             document.body.appendChild(noBtn);
-        }
-    });
+        });
+    }
+});
 </script>
 
 </body>
